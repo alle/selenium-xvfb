@@ -1,7 +1,13 @@
 #!/bin/bash
-# 
-# Start xvfb for selenium
-#
+### BEGIN INIT INFO
+# Provides:          selenium-xvfb
+# Required-Start:    $local_fs $remote_fs $network $syslog
+# Required-Stop:     $local_fs $remote_fs $network $syslog $selenium-vnc
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# X-Interactive:     true
+# Short-Description: Start/stop virtual x server for selenium
+### END INIT INFO
 
 DISPLAY="99"
 DESC="Xvfb for selenium"
@@ -177,6 +183,8 @@ case "$1" in
     exit 3
     ;;
 esac
+
+export DISPLAY=":$DISPLAY"
 
 exit 0
 

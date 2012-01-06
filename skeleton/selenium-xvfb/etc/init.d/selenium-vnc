@@ -1,15 +1,20 @@
 #!/bin/bash
-# 
-# Start xvfb for selenium
-#
+### BEGIN INIT INFO
+# Provides:          selenium-vnc
+# Required-Start:    $local_fs $remote_fs $network $syslog $selenium-xvfb $selenium-server
+# Required-Stop:     $local_fs $remote_fs $network $syslog $selenium-vnc
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# X-Interactive:     true
+# Short-Description: Start/stop VNC server to selenuim virtual x instance
+### END INIT INFO
 
 DISPLAY="99"
 DESC="VNC server for selenium"
-NAME="selenium-x11vnc"
+NAME="selenium-vnc"
 SCRIPTNAME=/etc/init.d/selenuim-vnc
 USER=root
 
-LOGFILE="/var/log/selenium-vnc.log"
 PIDFILE="/var/run/${NAME}.pid"
 BIN="/usr/bin/x11vnc"
 LOGFILE="/var/log/selenium/vnc.log"

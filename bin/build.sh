@@ -2,12 +2,7 @@
 
 set -e
 
-while getopts v: option
-do
-  case $option in
-    v) VERSION=$OPTARG;;
-  esac
-done
+VERSION="1.0"
 
 if [ -z $VERSION ]; then
   echo "Usage: $0 -v <version>"
@@ -37,6 +32,8 @@ cp -R ../skeleton/selenium-xvfb .
 sed -i "s/VERSION/$VERSION/" selenium-xvfb/DEBIAN/control
 
 sudo chown -R root:root *
+sudo chmod 0755 $PACKAGE_DIR/selenium-xvfb/DEBIAN/postinst
+sudo chmod 0755 $PACKAGE_DIR/selenium-xvfb/DEBIAN/postrm
 sudo chmod a+x $PACKAGE_DIR/selenium-xvfb/etc/init.d/selenium-vnc
 sudo chmod a+x $PACKAGE_DIR/selenium-xvfb/etc/init.d/selenium-xvfb
 
