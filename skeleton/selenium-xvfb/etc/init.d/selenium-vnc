@@ -1,0 +1,194 @@
+#!/bin/bash
+# 
+# Start xvfb for selenium
+#
+
+DISPLAY="99"
+DESC="VNC server for selenium"
+NAME="selenium-x11vnc"
+SCRIPTNAME=/etc/init.d/selenuim-vnc
+USER=root
+
+LOGFILE="/var/log/selenium-vnc.log"
+PIDFILE="/var/run/${NAME}.pid"
+BIN="/usr/bin/x11vnc"
+LOGFILE="/var/log/selenium/vnc.log"
+AUTHFILE="/var/run/xauth_d$DISPLAY"
+PASSWDFILE="/root/.vnc/passwd"
+ARGS="-avahi -noxdamage -shared -forever -bg -loop -rfbauth $PASSWDFILE -auth $AUTHFILE -display :$DISPLAY -o $LOGFILE"
+FORCEKILL="x11vnc"
+
+DAEMON=/usr/bin/daemon
+DAEMON_ARGS="--name=$NAME --inherit --pidfile=$PIDFILE" 
+
+if [ -z $AUTHFILE ]; then
+  echo "no auth file found in "$AUTHFILE", is x server running on display $DISPLAY? Exiting."
+  exit 1
+fi
+
+if [ -z $AUTHFILE ]; then
+        echo "no password file found in '$PASSWDFILE', Please create it by 'vncpasswd $PASSWDFILE'."
+        exit 1
+fi
+
+SU=/bin/su
+
+# load environments
+if [ -r /etc/default/locale ]; then
+  . /etc/default/locale
+  export LANG LANGUAGE
+elif [ -r /etc/environment ]; then
+  . /etc/environment
+  export LANG LANGUAGE
+fi
+
+# Load the VERBOSE setting and other rcS variables
+. /lib/init/vars.sh
+
+# Define LSB log_* functions.
+# Depend on lsb-base (>= 3.0-6) to ensure that this file is present.
+. /lib/lsb/init-functions
+
+# Make sure we run as root, since setting the max open files through
+# ulimit requires root access
+if [ `id -u` -ne 0 ]; then
+    echo "The $NAME init script can only be run as root"
+    exit 1
+fi
+
+# Start the service
+do_start() {
+    # Return
+    #   0 if daemon has been started
+    #   1 if daemon was already running
+    #   2 if daemon could not be started
+    $DAEMON $DAEMON_ARGS --running && return 1
+
+    # --user in daemon doesn't prepare environment variables like HOME, USER, LOGNAME or USERNAME,
+    # so we let su do so for us now
+    $SU -l $USER --shell=/bin/bash -c "$DAEMON $DAEMON_ARGS -- $BIN $ARGS" || return 2
+}
+
+#
+# Verify that all processes have been shutdown
+# and if not, then do killall for them
+# 
+get_running() 
+{
+    return `ps -U $USER --no-headers -f | egrep -e '(${NAME}|daemon)' | grep -c . `
+}
+
+# Get the status of the daemon process
+get_daemon_status()
+{
+    $DAEMON $DAEMON_ARGS --running || return 1
+}
+
+force_stop() 
+{
+    get_running
+    if [ $? -ne 0 ]; then 
+        killall -u $USER $FORCEKILL || return 3
+    fi
+}
+
+# Restart the service
+do_stop() {
+    # Return
+    #   0 if daemon has been stopped
+    #   1 if daemon was already stopped
+    #   2 if daemon could not be stopped
+    #   other if a failure occurred
+    get_daemon_status 
+    case "$?" in
+        0) 
+            $DAEMON $DAEMON_ARGS --stop || return 2
+        	# wait for the process to really terminate
+        	for n in 1 2 3 4 5; do
+            	sleep 1
+            	$DAEMON $DAEMON_ARGS --running || break
+        	done
+        	if get_daemon_status; then
+                force_stop || return 3
+        	fi
+            ;;
+        *)
+            force_stop || return 3
+            ;;
+    esac
+
+    # Many daemons don't delete their pidfiles when they exit.
+    rm -f $PIDFILE
+    return 0
+}
+
+### main logic ###
+case "$1" in
+  start)
+    log_daemon_msg "Starting $DESC" "$NAME"
+    do_start
+    case "$?" in
+        0|1) log_end_msg 0 ;;
+        2) log_end_msg 1 ;;
+    esac
+    ;;
+  stop)
+    log_daemon_msg "Stopping $DESC" "$NAME"
+    do_stop
+    case "$?" in
+        0|1) log_end_msg 0 ;;
+        2) log_end_msg 1 ;;
+    esac
+    ;;
+  restart)
+    #
+    # If the "reload" option is implemented then remove the
+    # 'force-reload' alias
+    #
+    log_daemon_msg "Restarting $DESC" "$NAME"
+    do_stop
+    case "$?" in
+      0|1)
+        do_start
+        case "$?" in
+          0) log_end_msg 0 ;;
+          1) log_end_msg 1 ;; # Old process is still running
+          *) log_end_msg 1 ;; # Failed to start
+        esac
+        ;;
+      *)
+        # Failed to stop
+        log_end_msg 1
+        ;;
+    esac
+    ;;
+  status)
+      get_daemon_status
+      case "$?" in 
+         0) echo "$DESC is running with the pid `cat $PIDFILE` ($PIDFILE)";;
+         *) 
+              get_running
+              procs=$?
+              if [ $procs -eq 0 ]; then 
+                  echo -n "$DESC is not running"
+                  if [ -f $PIDFILE ]; then 
+                      echo ", but the pidfile ($PIDFILE) still exists"
+                  else 
+                      echo
+                  fi
+
+              else 
+                  echo "$procs instances of running"
+                  echo "but the pidfile $PIDFILE is missing"
+              fi
+              ;;
+      esac
+    ;;
+  *)
+    echo "Usage: $SCRIPTNAME {start|stop|status|restart}" >&2
+    exit 3
+    ;;
+esac
+
+exit 0
+
