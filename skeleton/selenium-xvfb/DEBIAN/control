@@ -1,9 +1,9 @@
 Package: selenium-xvfb
-Version: VERSION 
+Version: VERSION
 Section: web
 Maintainer: Jan Schumann <js@schumann-it.com>
 Architecture: amd64
-Depends: selenium-server, avahi-daemon, daemon, lsb-base (>= 3.0-6), xvfb, vnc4server, x11vnc, x11-xkb-utils, xfonts-100dpi, xfonts-75dpi, xfonts-scalable, xfonts-cyrillic, x-ttcidfont-conf, xserver-xorg-core
+Depends: selenium-server, daemon, lsb-base (>= 3.0-6), xvfb, x11vnc, x11-xkb-utils, xfonts-100dpi, xfonts-75dpi, xfonts-scalable, xfonts-cyrillic, x-ttcidfont-conf, xserver-xorg-core
 Priority: optional
 Description: Start selenuim tests on a server in a virtual framebuffer
  Contains start and stop scripts for the x system. Also provides a vno server for the selenium x instance.
