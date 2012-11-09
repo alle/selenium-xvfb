@@ -16,14 +16,16 @@ SCRIPTNAME=/etc/init.d/selenuim-xvfb
 USER=root
 
 PIDFILE="/var/run/${NAME}.pid"
-BIN="/usr/bin/xvfb-run"
+#BIN="/usr/bin/xvfb-run"
+BIN="/usr/bin/Xvfb"
 LOGFILE="/var/log/selenium/xvfb_error.log"
-AUTHFILE="/var/run/xauth_d$DISPLAY"
-ARGS="--server-args=\":${DISPLAY} -screen 0 2048x1152x24\" -e $LOGFILE -f $AUTHFILE xlogo"
+#AUTHFILE="/var/run/xauth_d$DISPLAY"
+#ARGS="--server-args=\":${DISPLAY} -screen 0 2048x1152x24\" -e $LOGFILE -f $AUTHFILE xlogo"
+ARGS=":${DISPLAY} -screen 0 1024x768x16 -ac"
 FORCEKILL="Xvfb"
 
 DAEMON=/usr/bin/daemon
-DAEMON_ARGS="--name=$NAME --inherit --pidfile=$PIDFILE" 
+DAEMON_ARGS="--name=$NAME --inherit --pidfile=$PIDFILE"
 
 SU=/bin/su
 
@@ -66,8 +68,8 @@ do_start() {
 #
 # Verify that all processes have been shutdown
 # and if not, then do killall for them
-# 
-get_running() 
+#
+get_running()
 {
     return `ps -U $USER --no-headers -f | egrep -e '(${NAME}|daemon)' | grep -c . `
 }
@@ -78,10 +80,10 @@ get_daemon_status()
     $DAEMON $DAEMON_ARGS --running || return 1
 }
 
-force_stop() 
+force_stop()
 {
     get_running
-    if [ $? -ne 0 ]; then 
+    if [ $? -ne 0 ]; then
         killall -u $USER $FORCEKILL || return 3
     fi
 }
@@ -93,9 +95,9 @@ do_stop() {
     #   1 if daemon was already stopped
     #   2 if daemon could not be stopped
     #   other if a failure occurred
-    get_daemon_status 
+    get_daemon_status
     case "$?" in
-        0) 
+        0)
             $DAEMON $DAEMON_ARGS --stop || return 2
         	# wait for the process to really terminate
         	for n in 1 2 3 4 5; do
@@ -158,20 +160,20 @@ case "$1" in
     ;;
   status)
       get_daemon_status
-      case "$?" in 
+      case "$?" in
          0) echo "$DESC is running with the pid `cat $PIDFILE` ($PIDFILE)";;
-         *) 
+         *)
               get_running
               procs=$?
-              if [ $procs -eq 0 ]; then 
+              if [ $procs -eq 0 ]; then
                   echo -n "$DESC is not running"
-                  if [ -f $PIDFILE ]; then 
+                  if [ -f $PIDFILE ]; then
                       echo ", but the pidfile ($PIDFILE) still exists"
-                  else 
+                  else
                       echo
                   fi
 
-              else 
+              else
                   echo "$procs instances of running"
                   echo "but the pidfile $PIDFILE is missing"
               fi
