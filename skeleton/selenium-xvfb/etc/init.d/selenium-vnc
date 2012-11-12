@@ -22,7 +22,7 @@ LOGFILE="/var/log/selenium/vnc.log"
 #AUTHFILE="/var/run/xauth_d$DISPLAY"
 PASSWDFILE="/root/.vnc/passwd"
 #ARGS="-avahi -noxdamage -shared -forever -bg -loop -rfbauth $PASSWDFILE -auth $AUTHFILE -display :$DISPLAY -o $LOGFILE"
-ARGS="-rfbport ${PORT} -forever -bg -usepw -display :$DISPLAY -shared -o $LOGFILE"
+ARGS="-rfbport $PORT -forever -bg -usepw -display :$DISPLAY -shared -o $LOGFILE"
 FORCEKILL="x11vnc"
 
 DAEMON=/usr/bin/daemon
